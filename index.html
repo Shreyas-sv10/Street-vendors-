@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StreetVendor Marketplace — Modern Dashboard</title>
+  <meta name="description" content="Smart Street Vendor Marketplace — vendor & customer dashboards, location, ordering, scheduling." />
+  <!-- Link to external stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts (placeholder) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Minimal inline reset so the file looks ok before you add style.css */
+    :root { --brand:#0ea5a4; --muted:#6b7280; --bg:#f7f9fb; --card:#ffffff; --accent:#06b6d4; }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    .hidden{display:none;}
+  </style>
+</head>
+<body>
+  <!-- App root -->
+  <div id="app" class="app-root">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="header-left">
+        <button id="toggle-sidebar" class="btn icon-btn" title="Toggle sidebar">☰</button>
+        <div class="brand">
+          <span class="brand-mark">SV</span>
+          <div class="brand-text">
+            <div class="brand-title">StreetVendor</div>
+            <div class="brand-sub">Local Marketplace</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <input id="global-search" type="search" placeholder="Search vendors, items or categories..." />
+      </div>
+
+      <div class="header-right">
+        <div class="header-actions">
+          <button id="btn-notifications" class="btn icon-btn" title="Notifications">🔔<span id="notif-count" class="badge hidden">0</span></button>
+          <button id="btn-profile" class="btn avatar-btn">S</button>
+          <button id="btn-logout" class="btn ghost hidden">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== LAYOUT: SIDEBAR + MAIN ===== -->
+    <div class="layout">
+
+      <!-- SIDEBAR -->
+      <aside id="sidebar" class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="#" data-panel="home" class="nav-link active">🏠 Home</a></li>
+            <li><a href="#" data-panel="vendors" class="nav-link">🛍️ Vendors</a></li>
+            <li><a href="#" data-panel="orders" class="nav-link">📦 Orders</a></li>
+            <li><a href="#" data-panel="favorites" class="nav-link">❤️ Favorites</a></li>
+            <li><a href="#" data-panel="settings" class="nav-link">⚙️ Settings</a></li>
+            <li><a href="#" data-panel="help" class="nav-link">❓ Help</a></li>
+          </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+          <small class="muted">Demo • LocalStorage</small>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main id="main" class="main">
+
+        <!-- ===== AUTH SCREEN (Login/Register) ===== -->
+        <section id="auth-screen" class="panel card auth-panel">
+          <div class="auth-grid">
+
+            <div class="auth-left">
+              <h1>Welcome to StreetVendor</h1>
+              <p class="muted">Connect with nearby street vendors, place orders, and schedule pickups. Toggle between <strong>Customer</strong> and <strong>Vendor</strong> roles at login.</p>
+              <ul class="features-list">
+                <li>Role-based login (Vendor / Customer)</li>
+                <li>Multiple vendors & product catalogs</li>
+                <li>Cart, place & schedule orders</li>
+                <li>Location-based notifications (demo)</li>
+              </ul>
+              <p class="muted small">This is a frontend demo. All data stored in localStorage for testing and GitHub hosting.</p>
+            </div>
+
+            <div class="auth-right card">
+              <div class="auth-tabs">
+                <button class="tab active" data-tab="signin">Sign In / Register</button>
+                <button class="tab" data-tab="quick">Quick Demo</button>
+              </div>
+
+              <div id="signin" class="tab-panel active">
+                <form id="form-auth" class="form">
+                  <label class="form-row">
+                    <span>Role</span>
+                    <div class="role-choice">
+                      <label><input type="radio" name="role" value="customer" checked> Customer</label>
+                      <label><input type="radio" name="role" value="vendor"> Vendor</label>
+                    </div>
+                  </label>
+
+                  <label class="form-row">
+                    <span>Full name</span>
+                    <input id="input-name" type="text" placeholder="Your full name" required />
+                  </label>
+
+                  <label class="form-row">
+                    <span>Phone or ID</span>
+                    <input id="input-phone" type="text" placeholder="Phone or unique ID" required />
+                  </label>
+
+                  <label class="form-row">
+                    <span>Optional: Business/Category</span>
+                    <input id="input-category" type="text" placeholder="e.g., Food, Fruits, Clothes" />
+                  </label>
+
+                  <div class="form-row">
+                    <button id="btn-login" type="button" class="btn primary full">Login / Register</button>
+                  </div>
+                </form>
+
+                <div class="muted small">By logging in you create a demo account saved to your browser.</div>
+              </div>
+
+              <div id="quick" class="tab-panel">
+                <p class="muted">Quick demo will pre-populate sample vendors, products, and a sample customer for immediate testing.</p>
+                <div class="form-row">
+                  <button id="btn-quick-demo" class="btn full">Load Demo Data</button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===== HOME / DASHBOARD (role-dependent) ===== -->
+        <section id="home-panel" class="panel hidden">
+
+          <!-- CUSTOMER SUMMARY -->
+          <div id="customer-summary" class="dashboard-grid hidden">
+            <div class="card stat-card">
+              <div class="stat-title">Nearby Vendors</div>
+              <div id="stat-vendors" class="stat-value">0</div>
+              <div class="stat-sub muted">Vendors currently active near you</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Cart Items</div>
+              <div id="stat-cart-count" class="stat-value">0</div>
+              <div class="stat-sub muted">Items in your cart</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Scheduled Orders</div>
+              <div id="stat-scheduled" class="stat-value">0</div>
+              <div class="stat-sub muted">Orders scheduled for later</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Favorites</div>
+              <div id="stat-fav" class="stat-value">0</div>
+              <div class="stat-sub muted">Saved favorite vendors</div>
+            </div>
+          </div>
+
+          <!-- VENDOR SUMMARY -->
+          <div id="vendor-summary" class="dashboard-grid hidden">
+            <div class="card stat-card">
+              <div class="stat-title">Your Products</div>
+              <div id="vendor-stat-products" class="stat-value">0</div>
+              <div class="stat-sub muted">Total items listed</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Orders Received</div>
+              <div id="vendor-stat-orders" class="stat-value">0</div>
+              <div class="stat-sub muted">New & pending orders</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Active Customers Nearby</div>
+              <div id="vendor-stat-customers" class="stat-value">0</div>
+              <div class="stat-sub muted">Customers within radius</div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-title">Status</div>
+              <div id="vendor-stat-status" class="stat-value">Inactive</div>
+              <div class="stat-sub muted">Toggle your availability</div>
+            </div>
+          </div>
+
+          <!-- WELCOME CARD -->
+          <div class="card welcome-card">
+            <h2 id="welcome-heading">Hello — welcome back!</h2>
+            <p id="welcome-sub" class="muted">Use the sidebar to navigate. On the Vendors page you can browse and add items to your cart. Vendor users can manage products and orders.</p>
+            <div class="welcome-actions">
+              <button id="jump-vendors" class="btn">Browse Vendors</button>
+              <button id="jump-orders" class="btn ghost">Your Orders</button>
+            </div>
+          </div>
+
+          <!-- RECENT ACTIVITY -->
+          <div class="card activity-card">
+            <h3>Recent Activity</h3>
+            <ul id="recent-activity" class="activity-list">
+              <!-- Items inserted by JS -->
+            </ul>
+          </div>
+
+        </section>
+
+        <!-- ===== VENDORS LIST & MAP ===== -->
+        <section id="vendors-panel" class="panel hidden">
+          <div class="panel-header">
+            <h2>Nearby Vendors</h2>
+            <div class="panel-actions">
+              <button id="btn-refresh-vendors" class="btn">Refresh</button>
+              <label class="muted">Radius:
+                <select id="select-radius">
+                  <option value="0.5">0.5 km</option>
+                  <option value="1" selected>1 km</option>
+                  <option value="2">2 km</option>
+                  <option value="5">5 km</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="vendors-grid">
+            <aside class="vendors-filter card">
+              <h4>Filters</h4>
+              <div class="form-row">
+                <label>Category</label>
+                <select id="filter-category">
+                  <option value="">All</option>
+                  <option value="food">Food</option>
+                  <option value="fruits">Fruits</option>
+                  <option value="clothes">Clothes</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label>Search</label>
+                <input id="filter-search" type="text" placeholder="Search items or vendor name" />
+              </div>
+
+              <div class="form-row">
+                <label>Sort by</label>
+                <select id="sort-by">
+                  <option value="distance">Distance</option>
+                  <option value="rating">Rating</option>
+                  <option value="popular">Popular</option>
+                </select>
+              </div>
+
+              <div class="muted small">Map view is a placeholder. Connect to Google Maps or Leaflet for full map features.</div>
+            </aside>
+
+            <div class="vendors-list">
+              <div id="vendors-container" class="card-grid">
+                <!-- Vendor cards injected by JS -->
+                <!-- Example static card as placeholder -->
+                <article class="vendor-card card sample">
+                  <div class="vendor-card-top">
+                    <div class="vendor-avatar">🍲</div>
+                    <div>
+                      <h3 class="vendor-name">Sample Vendor</h3>
+                      <div class="muted">Category: Food • 0.6 km</div>
+                    </div>
+                    <div class="vendor-actions">
+                      <button class="btn small view-products" data-vendor-id="sample-1">View</button>
+                      <button class="btn small outline favorite-toggle" data-vendor-id="sample-1">♡</button>
+                    </div>
+                  </div>
+                  <div class="vendor-products">
+                    <div class="product-mini">Samosa — ₹20</div>
+                    <div class="product-mini">Tea — ₹10</div>
+                    <div class="product-mini">Juice — ₹40</div>
+                  </div>
+                </article>
+              </div>
+
+              <div id="vendors-pagination" class="pagination muted small">Page 1</div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ===== PRODUCT & CART PANEL ===== -->
+        <section id="cart-panel" class="panel hidden">
+          <div class="panel-header">
+            <h2>Cart & Checkout</h2>
+            <div class="panel-actions">
+              <button id="btn-clear-cart" class="btn ghost">Clear Cart</button>
+              <button id="btn-checkout" class="btn primary">Checkout</button>
+            </div>
+          </div>
+
+          <div class="cart-grid">
+            <div class="cart-items card">
+              <h4>Your Cart</h4>
+              <div id="cart-items" class="cart-items-list muted">No items — add from vendor menus.</div>
+            </div>
+
+            <aside class="checkout-card card">
+              <h4>Order Summary</h4>
+              <div class="summary-row"><span>Items</span><span id="summary-count">0</span></div>
+              <div class="summary-row"><span>Subtotal</span><span id="summary-subtotal">₹0</span></div>
+              <div class="summary-row"><span>Delivery</span><span id="summary-delivery">₹0</span></div>
+              <div class="summary-row total"><strong>Total</strong><strong id="summary-total">₹0</strong></div>
+
+              <div class="form-row">
+                <label>Schedule</label>
+                <select id="schedule-type">
+                  <option value="now">Now</option>
+                  <option value="later">Schedule</option>
+                </select>
+                <input id="schedule-time" type="datetime-local" class="hidden" />
+              </div>
+
+              <div class="form-row">
+                <label>Contact name</label>
+                <input id="checkout-name" type="text" placeholder="Receiver name" />
+              </div>
+
+              <div class="form-row">
+                <label>Contact phone</label>
+                <input id="checkout-phone" type="text" placeholder="Phone number" />
+              </div>
+
+              <div class="form-row">
+                <button id="btn-place-order" class="btn full primary">Place Order</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ===== ORDERS MANAGEMENT ===== -->
+        <section id="orders-panel" class="panel hidden">
+          <div class="panel-header">
+            <h2>Orders</h2>
+            <div class="panel-actions">
+              <button id="btn-refresh-orders" class="btn">Refresh</button>
+            </div>
+          </div>
+
+          <div class="orders-grid">
+            <div class="card orders-card">
+              <h4>Your Orders</h4>
+              <div id="orders-list" class="orders-list">
+                <!-- Orders appear here -->
+                <div class="muted">No orders yet.</div>
+              </div>
+            </div>
+
+            <aside class="card order-stats">
+              <h4>Order Stats</h4>
+              <div class="summary-row"><span>Pending</span><span id="orders-pending">0</span></div>
+              <div class="summary-row"><span>Accepted</span><span id="orders-accepted">0</span></div>
+              <div class="summary-row"><span>Completed</span><span id="orders-completed">0</span></div>
+            </aside>
+          </div>
+
+        </section>
+
+        <!-- ===== VENDOR DASHBOARD (Manage Products & Orders) ===== -->
+        <section id="vendor-panel" class="panel hidden">
+          <div class="panel-header">
+            <h2>Vendor Dashboard</h2>
+            <div class="panel-actions">
+              <label>Active:
+                <input id="vendor-active-toggle" type="checkbox" />
+              </label>
+              <button id="btn-use-gps" class="btn">Set GPS</button>
+            </div>
+          </div>
+
+          <div class="vendor-grid">
+            <div class="card vendor-products">
+              <h4>Your Products</h4>
+              <form id="form-add-product" class="form-inline">
+                <input id="prod-name" placeholder="Name" />
+                <input id="prod-price" placeholder="Price" type="number" />
+                <input id="prod-desc" placeholder="Short description" />
+                <input id="prod-img" placeholder="Image URL (optional)" />
+                <button id="btn-add-product" class="btn">Add</button>
+              </form>
+
+              <div id="vendor-products-list" class="card-grid">
+                <!-- Vendor product cards -->
+                <div class="muted">No products yet. Add your first item.</div>
+              </div>
+            </div>
+
+            <div class="card vendor-orders">
+              <h4>Orders Received</h4>
+              <div id="vendor-orders-list" class="orders-list muted">No orders yet.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== FAVORITES ===== -->
+        <section id="favorites-panel" class="panel hidden">
+          <div class="card">
+            <h3>Your Favorite Vendors</h3>
+            <div id="favorites-list" class="card-grid muted">No favorites yet — mark vendors with ♥</div>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS ===== -->
+        <section id="settings-panel" class="panel hidden">
+          <div class="card">
+            <h3>Settings</h3>
+            <form id="settings-form" class="form">
+              <label class="form-row">
+                <span>Notification mode</span>
+                <select id="settings-notif-mode">
+                  <option value="popup">In-app popup</option>
+                  <option value="browser">Browser notification (requires permission)</option>
+                </select>
+              </label>
+
+              <label class="form-row">
+                <span>Proximity radius (km)</span>
+                <input id="settings-radius" type="number" min="0.1" step="0.1" value="1" />
+              </label>
+
+              <label class="form-row">
+                <span>Units</span>
+                <select id="settings-units"><option value="metric">Metric (km)</option></select>
+              </label>
+
+              <div class="form-row">
+                <button id="btn-save-settings" class="btn">Save Settings</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ===== HELP ===== -->
+        <section id="help-panel" class="panel hidden">
+          <div class="card">
+            <h3>Help & Documentation</h3>
+            <p class="muted">This demo uses localStorage to simulate users, vendors, products and orders. For production use, integrate with a backend (e.g., Firebase) for real-time updates and persistence.</p>
+            <ol>
+              <li>Login as vendor and add products.</li>
+              <li>Login as customer, set location (Use GPS) and browse vendors.</li>
+              <li>Add items to cart and place immediate or scheduled orders.</li>
+              <li>Vendor sees incoming orders and can accept/complete them.</li>
+            </ol>
+            <p class="muted">Need sample CSS & JS? Ask me and I'll generate `style.css` and `script.js` tuned to this HTML structure.</p>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer muted small">© StreetVendor Demo • LocalStorage • Built for testing & GitHub hosting</footer>
+
+      </main>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Product modal -->
+    <div id="modal-product" class="modal hidden" role="dialog" aria-hidden="true">
+      <div class="modal-panel card">
+        <header class="modal-header">
+          <h3 id="modal-product-title">Vendor — Products</h3>
+          <button class="btn icon-btn modal-close" data-close="modal-product">✕</button>
+        </header>
+
+        <div id="modal-product-body" class="modal-body">
+          <!-- Vendor details and product list go here -->
+          <div id="modal-vendor-info" class="vendor-info">
+            <h4 id="modal-vendor-name">Vendor Name</h4>
+            <div id="modal-vendor-distance" class="muted">Distance: —</div>
+            <div id="modal-vendor-category" class="muted small">Category: —</div>
+          </div>
+
+          <div id="modal-vendor-products" class="card-grid">
+            <!-- product cards injected -->
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button class="btn ghost" data-close="modal-product">Close</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Order detail modal -->
+    <div id="modal-order" class="modal hidden" role="dialog" aria-hidden="true">
+      <div class="modal-panel card">
+        <header class="modal-header">
+          <h3 id="modal-order-title">Order Details</h3>
+          <button class="btn icon-btn modal-close" data-close="modal-order">✕</button>
+        </header>
+
+        <div id="modal-order-body" class="modal-body">
+          <!-- order details inserted by JS -->
+          <div id="modal-order-content" class="order-detail muted">Select an order to view details.</div>
+        </div>
+
+        <footer class="modal-footer">
+          <button id="btn-order-accept" class="btn">Accept</button>
+          <button id="btn-order-complete" class="btn ghost">Complete</button>
+          <button class="btn ghost" data-close="modal-order">Close</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ===== TEMPLATES (hidden) ===== -->
+    <template id="tpl-vendor-card">
+      <article class="vendor-card card">
+        <div class="vendor-card-top">
+          <div class="vendor-avatar">🍛</div>
+          <div>
+            <h3 class="vendor-name"></h3>
+            <div class="muted vendor-meta"></div>
+          </div>
+          <div class="vendor-actions">
+            <button class="btn small view-products">View</button>
+            <button class="btn small outline favorite-toggle">♡</button>
+          </div>
+        </div>
+        <div class="vendor-products"></div>
+      </article>
+    </template>
+
+    <template id="tpl-product-mini">
+      <div class="product-mini">
+        <div class="pm-left">
+          <div class="pm-title"></div>
+          <div class="muted pm-desc"></div>
+        </div>
+        <div class="pm-right">
+          <div class="pm-price"></div>
+          <button class="btn tiny add-to-cart">Add</button>
+        </div>
+      </div>
+    </template>
+
+    <template id="tpl-order-item">
+      <div class="order-item card">
+        <div class="order-head">
+          <div class="order-id">#ORDER-ID</div>
+          <div class="muted order-meta">Vendor • Time</div>
+        </div>
+        <div class="order-body"></div>
+        <div class="order-actions">
+          <button class="btn small view-order">View</button>
+          <button class="btn small ghost cancel-order">Cancel</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- small accessibility notices -->
+    <div id="sr-only" class="sr-only" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Link to external JS (deferred) -->
+  <script src="script.js" defer></script>
+
+  <!-- Inline small script to ensure demo placeholders won't all be empty (optional) -->
+  <script>
+    // Safety: lightweight demo hints so first-time load looks populated before script.js runs
+    (function(){
+      try {
+        const demo = localStorage.getItem('sv_demo_loaded');
+        if(!demo){
+          // set a tiny placeholder so UI doesn't look empty; real demo loader will populate
+          document.addEventListener('DOMContentLoaded', ()=>{
+            const sample = document.querySelector('.vendor-card.sample');
+            if(sample){
+              sample.classList.remove('hidden');
+            }
+          });
+        }
+      } catch(e){}
+    })();
+  </script>
+</body>
+  </html>
